@@ -4,12 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snowflake Schema Visualizer</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .loader {
+            width: 100%;
+            height: 12px;
+            display: inline-block;
+            background-color: #FFF;
+            background-image: linear-gradient(45deg, rgba(0, 0, 0, 0.25) 25%, transparent 25%, transparent 50%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.25) 75%, transparent 75%, transparent);
+            font-size: 30px;
+            background-size: 1em 1em;
+            box-sizing: border-box;
+            animation: barStripe 1s linear infinite;
+        }
+
+        @keyframes barStripe {
+            0% {background-position: 1em 0;}
+            100% {background-position: 0 0;}
+        }
+    </style>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
         <h1 class="text-center">Snowflake Schema Visualizer</h1>
-        <form method="POST" class="mt-4">
+        <form method="POST" class="mt-4" onsubmit="handleFormSubmit(event)">
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="database">Database:</label>
@@ -24,11 +46,54 @@
                 <input type="checkbox" class="form-check-input" id="show_columns" name="show_columns">
                 <label class="form-check-label" for="show_columns">Show Columns</label>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Generate Schema</button>
+            <button type="submit" class="btn btn-primary btn-block" id="submit-button">Generate Schema</button>
+            <div class="loader mx-auto" id="loader"></div>
         </form>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function handleFormSubmit(event) {
+            event.preventDefault(); // Prevent the form from submitting immediately
+
+            // Disable the submit button and change its appearance
+            const submitButton = document.getElementById('submit-button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Generating...';
+            submitButton.classList.add('btn-secondary');
+            submitButton.classList.remove('btn-primary');
+            submitButton.style.cursor = 'not-allowed';
+
+            // Show the loading spinner
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+
+            // Submit the form programmatically
+            const form = event.target;
+            fetch('/', {
+                method: 'POST',
+                body: new FormData(form),
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url; // Redirect to the results page
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            })
+            .finally(() => {
+                // Re-enable the button and hide the loader (in case of errors)
+                submitButton.disabled = false;
+                submitButton.textContent = 'Generate Schema';
+                loader.style.display = 'none';
+                submitButton.classList.remove('btn-secondary');
+                submitButton.classList.add('btn-primary');
+                submitButton.style.cursor = 'pointer';
+            });
+        }
+    </script>
 </body>
 </html>
